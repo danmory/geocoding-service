@@ -1,3 +1,0 @@
-package middlewares
-
-// Check token

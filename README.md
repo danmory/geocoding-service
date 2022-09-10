@@ -1,3 +1,3 @@
-# Geocoding Server
+# Geocoding Service
 
 In progress...
