@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"errors"
 
 	"github.com/danmory/geocoding-service/auth-service/internal/core"
@@ -10,19 +9,14 @@ import (
 )
 
 func retrieveUser(username string) (*core.User, error) {
-	db := psql.GetDatabase()
-	row := db.QueryRow(
-		context.Background(),
-		"SELECT username, password FROM users WHERE username=$1", username) // TODO: to CRUD
-	var user core.User
-	err := row.Scan(&user.Username, &user.Password)
+	user, err := psql.GetByUsername(username)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return user, nil
 }
 
 func RegisterUser(user *core.User) (string, error) {
@@ -33,7 +27,6 @@ func RegisterUser(user *core.User) (string, error) {
 	if existingUser != nil {
 		return "", errors.New("user already exists")
 	}
-	db := psql.GetDatabase()
 	if !isPasswordStrong(user.Password) {
 		return "", errors.New("weak password")
 	}
@@ -41,13 +34,9 @@ func RegisterUser(user *core.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if _, err = db.Exec(
-		context.Background(),
-		"INSERT INTO users VALUES($1, $2)",
-		user.Username,
-		hashedPassword); err != nil {
+	if err := psql.SaveUser(user.Username, hashedPassword); err != nil {
 		return "", err
-	} // TODO: to CRUD
+	}
 	token, err := generateJWT(user.Username)
 	if err != nil {
 		return "", err
