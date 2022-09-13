@@ -1,3 +1,8 @@
 package core
 
-// Structure of the JWT token
+import "github.com/golang-jwt/jwt"
+
+type JWTClaim struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
+}
